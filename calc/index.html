@@ -1,0 +1,383 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Kalkulator ofertowy</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.0.min.js"></script>
+    <script type="text/javascript">
+        var precision = 10;
+        (function ($) {
+            $(function () {
+                $('[data-preset-for]').change(function () {
+                    var $target = $($(this).data('preset-for'));
+                    $target.val($(this).val());
+                    $target.trigger('change');
+                });
+                $('[data-preset-val-for]').change(function () {
+                    var $target = $($(this).data('preset-val-for'));
+                    var $sel = $(this).find(':selected');
+                    var v = $sel.data('val');
+                    if (undefined === v) v = $sel.text();
+                    $target.val(v);
+                    $target.trigger('change');
+                });
+                $('[data-product]').change(function () {
+                    var groupnames = $(this).data('product').split(',');
+                    var result = 1;
+                    $('[data-product]').filter(function () {
+                        var _groupnames = $(this).data('product').split(',');
+                        for (var i = 0; i < _groupnames.length; i++) {
+                            for (var j = 0; j < groupnames.length; j++) {
+                                if (_groupnames[i] === groupnames[j]) return true;
+                            }
+                        }
+                    }).each(function () {
+                        var v = parseFloat($(this).val());
+                        if ($(this).is('[data-divide]')) {
+                            v = 1 / v;
+                        }
+                        result *= v;
+                    });
+                    var $target = $(groupnames.join(','));
+                    $target.val(result);
+                    $target.trigger('change');
+                });
+                $('[data-rewrite]').change(function () {
+                    $($(this).data('rewrite')).val($(this).val()).trigger('change');
+                });
+                $('[data-sum]').change(function () {
+                    $.each($(this).data('sum').split(','), function (i, selector) {
+                        var result = 0;
+                        $('[data-sum]').filter(function () {
+                            var _selectors = $(this).data('sum').split(',');
+                            for (j = 0; j < _selectors.length; j++) {
+                                if (selector === _selectors[j]) {
+                                    return true;
+                                }
+                            }
+                        }).each(function () {
+                            result += ($(this).is('[data-substract]') ? -1 : 1) * parseFloat($(this).val());
+                            $($(this).data('sum')).val(result).trigger('change');
+                        });
+                    });
+                });
+                $('input[type="number"][data-ceil]:not([data-sum][data-product])').change(function () {
+                    var step = parseFloat($(this).data('ceil'));
+                    $(this).val(Math.ceil(parseFloat($(this).val()) / step) * step);
+                });
+                $('input[type="number"][data-floor]:not([data-sum][data-product])').change(function () {
+                    var step = parseFloat($(this).data('floor'));
+                    $(this).val(Math.floor(parseFloat($(this).val()) / step) * step);
+                });
+                $('input, select, textarea').change();
+            })
+        })(jQuery);
+    </script>
+</head>
+<body>
+<h1>Kalkulator ofertowy</h1>
+
+<form id="appraisal">
+    <h2>Wycena</h2>
+    <table class="subtotals">
+        <tbody>
+        <tr>
+            <th><label>Zespół</label>
+                <input id="a-band" type="number" readonly data-sum="#a-total"> zł
+            </th>
+            <td><label>Osób</label>
+                <input id="a-members" type="number" value="6" min="1"
+                       data-sum="#a-band-members,#a-extra-members"> os.
+            </td>
+            <input id="a-band-members" type="hidden" data-product="#a-band">
+            </td>
+            <td><label>Czas</label>
+                <input type="hidden" id="a-time" data-product="#a-band">
+                <select id="a-duration" data-preset-for="#a-rate" data-preset-val-for="#a-time">
+                    <optgroup label="2015">
+                        <option value="86" data-val="12">12</option>
+                        <option value="87" data-val="11">11</option>
+                        <option value="89" data-val="10" selected>10</option>
+                        <option value="92" data-val="9">9</option>
+                        <option value="99" data-val="8">8</option>
+                        <option value="110" data-val="7">7</option>
+                        <option value="126" data-val="6">6</option>
+                        <option value="149" data-val="5">5</option>
+                        <option value="180" data-val="4">4</option>
+                        <option value="220" data-val="3">3</option>
+                        <option value="271" data-val="2">2</option>
+                        <option value="333" data-val="1">1</option>
+                    </optgroup>
+                    <optgroup label="2014">
+                        <option value="86" data-val="10">10</option>
+                        <option value="91" data-val="9">9</option>
+                        <option value="96" data-val="8">8</option>
+                        <option value="105" data-val="7">7</option>
+                        <option value="120" data-val="6">6</option>
+                        <option value="139" data-val="5">5</option>
+                        <option value="163" data-val="4">4</option>
+                        <option value="192" data-val="3">3</option>
+                        <option value="240" data-val="2">2</option>
+                        <option value="288" data-val="1">1</option>
+                    </optgroup>
+                </select> godz.
+            </td>
+            <td><label>Stawka</label>
+                <input id="a-rate" type="number" value="90" min="50" data-product="#a-band"> zł/godz.
+            </td>
+        </tr>
+        <tr>
+            <th><label>Nadgodziny</label>
+                <input id="a-extra" type="number" value="0" readonly data-sum="#a-total"> zł
+            </th>
+            <td></td>
+            <td><label>Czas</label>
+                <input id="a-extra-time" type="number" value="0" min="0" max="8" data-product="#a-extra"> godz.
+            </td>
+            <td><label>Stawka</label>
+                <input id="a-extra-members" type="hidden" data-product="#a-extra">
+                <input id="a-extra-rate" type="number" value="75" min="0" data-product="#a-extra"> zł/godz.
+            </td>
+        </tr>
+        <tr>
+            <th><label>Afterparty (3h)</label>
+                <input id="a-afterparty" type="number" value="0" min="0" step="100" data-sum="#a-total"> zł
+            </th>
+            <td>
+                <select data-preset-for="#a-afterparty" data-preset-val-for="#a-taxi-switch">
+                    <option value="0" data-val="0">&mdash;</option>
+                    <option value="600" data-val="1">DJ 2015</option>
+                </select></td>
+        </tr>
+        <tr>
+            <th><label>Poprawiny (6h)</label>
+                <input id="a-poprawiny" type="number" value="0" min="0" step="100" data-sum="#a-total"> zł
+            </th>
+            <td>
+                <select data-preset-for="#a-poprawiny" data-preset-val-for="#a-taxi-switch">
+                    <option value="0" data-val="0">&mdash;</option>
+                    <option value="1000" data-val="1">DJ</option>
+                </select></td>
+        </tr>
+        <tr>
+            <th><label>Transport</label>
+                <input id="a-transport" type="number" data-sum="#a-total" data-ceil="50" readonly> zł
+            </th>
+            <td><label>Odległość</label>
+                <input id="a-distance" type="number" min="0" value="0" step="10" data-product="#a-transport"> km
+                <input id="a-back-forth" type="hidden" value="2" data-product="#a-transport"></td>
+            <td><label>Stawka</label>
+                <input id="a-transport-rate" type="number" step="0.01" data-product="#a-transport" readonly> zł/km
+            </td>
+            <td><label>Bus</label>
+                <input id="a-bus-rate" type="number" min="0" value="1.50" step="0.01" data-sum="#a-transport-rate">
+                zł/km
+            </td>
+            <td><label>TAXI</label>
+                <input id="a-taxi-rate-final" type="hidden" data-sum="#a-transport-rate">
+                <input id="a-taxi-switch" type="hidden" value="0" data-product="#a-taxi-rate-final">
+                <input id="a-taxi-rate" type="number" min="0" value="0.40" step="0.01"
+                       data-product="#a-taxi-rate-final"> zł/km
+            </td>
+            <td><label>Opcje</label>
+                <select data-preset-for="#a-distance">
+                    <option value="0">&lt;30 km</option>
+                    <option value="160">30 &mdash; 160 km</option>
+                    <option value="">160+ km</option>
+                </select></td>
+        </tr>
+        <tr>
+            <th><label>Scena</label>
+                <input id="a-stage" type="number" readonly data-sum="#a-total"> zł
+            </th>
+            <td><label>Nagłośnienie</label>
+                <input id="a-pa" type="number" value="220" min="50" step="10" data-sum="#a-stage"> zł
+            </td>
+            <td><label>Oświetlenie</label>
+                <input id="a-lights" type="number" value="80" min="20" step="10" data-sum="#a-stage"> zł
+            </td>
+        </tr>
+        <tr>
+            <th><label>Działalność</label>
+                <input id="a-company" type="number" min="0" step="10" data-sum="#a-total"> zł
+            </th>
+            <td><label>Management</label>
+                <input id="a-management" type="number" value="200" min="0" step="10" data-sum="#a-company"> zł
+            </td>
+            <td><label>Marketing</label>
+                <input id="a-marketing" type="number" value="100" min="0" step="10" data-sum="#a-company"> zł
+            </td>
+        </tr>
+        <tr>
+            <th><label>Rabat</label>
+                <input id="a-discount" type="number" value="0" min="0" step="50" data-sum="#a-total" data-substract> zł
+            </th>
+            <td>
+                <select data-preset-for="#a-discount">
+                    <option value="0">&mdash;</option>
+                    <option value="500">w tygodniu</option>
+                    <option value="500">last-minute</option>
+                    <option value="300">firma eventowa</option>
+                </select></td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <th><label>Łączny koszt</label>
+                <input id="a-whole" readonly type="number" data-ceil="100"> zł
+                <input id="a-total" type="hidden" data-product="#a-whole">
+                <input id="a-tax" type="hidden" value="1" data-product="#a-whole">
+            </th>
+            <td><label>Płatność</label>
+                <select data-preset-for="#a-tax">
+                    <option value="1">gotówka</option>
+                    <option value="1.219512195121951">przelew</option>
+                </select></td>
+        </tr>
+        </tfoot>
+    </table>
+</form>
+<form id="settlement">
+    <h1 id="when"></h1>
+
+    <h2>Rozliczenie</h2>
+    <table class="subtotals">
+        <thead>
+        <tr>
+            <th><label>Wartość umowy</label>
+                <input id="price" type="number" value="0" step="100" data-product="#netto" min="0"> zł
+            </th>
+            <td><label>Podatek</label>
+                <select data-preset-for="#price-tax">
+                    <option value="1">&mdash;</option>
+                    <option value="0.82">Rachunek 18%</option>
+                    <option value="0.91">UOD 50%</option>
+                    <option value="0.856">UOD 20%</option>
+                </select>
+                <input id="price-tax" type="hidden" value="1" data-product="#netto"></td>
+            <td><label>Netto</label>
+                <input id="netto" type="number" value="0" min="0" readonly data-sum="#band"> zł
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+        </tr>
+        <tr>
+            <th><label>Transport</label>
+                <input id="transport" type="number" value="500" step="100" data-sum="#band" data-substract data-rewrite="#wage-bus">
+                zł
+            </th>
+        </tr>
+        <tr>
+            <th><label>Scena</label>
+                <input id="stage" type="number" value="300" readonly data-sum="#band" data-substract> zł
+            </th>
+            <td><label>Nagłośnienie</label>
+                <input id="pa" type="number" value="220" min="50" step="10" data-sum="#stage" data-rewrite="#wage-pa">
+                zł
+            </td>
+            <td><label>Oświetlenie</label>
+                <input id="lights" type="number" value="80" min="20" step="10" data-sum="#stage"
+                       data-rewrite="#wage-light"> zł
+            </td>
+        </tr>
+        <tr>
+            <th><label>Działalność</label>
+                <input id="company" type="number" value="300" min="0" step="10" data-sum="#band" data-substract> zł
+            </th>
+            <td><label>Management</label>
+                <input id="management" type="number" value="200" min="10" step="10" data-sum="#company"
+                       data-rewrite="#wage-management"> zł
+            </td>
+            <td><label>Marketing</label>
+                <input id="marketing" type="number" value="100" min="0" step="10" data-sum="#company"
+                       data-rewrite="#wage-marketing"> zł
+            </td>
+        </tr>
+        <tr>
+            <th><label>Afterparty (3h)</label>
+                <input id="afterparty" type="number" value="0" min="0" step="100" data-sum="#band" data-substract> zł
+            </th>
+            <td>
+                <label>DJ</label>
+                <input id="dj" type="number" value="600" step="100" data-sum="#afterparty" data-rewrite="#wage-djparty">
+            </th>
+            <select data-preset-for="#dj">
+                <option value="0">&mdash;</option>
+                <option value="720">2015 + TAXI</option>
+                <option value="600">2015</option>
+                <option value="500">2014</option>
+            </select> </td>
+        </tr>
+        <tr>
+            <th><label>Poprawiny (6h)</label>
+                <input id="poprawiny" type="number" value="0" min="0" step="100" data-sum="#band" data-substract
+                       data-rewrite="#wage-poprawiny"> zł
+            </th>
+            <td>
+                <select data-preset-for="#poprawiny">
+                    <option value="0">&mdash;</option>
+                    <option value="1000">DJ</option>
+                </select></td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <th><label>Zespół</label>
+                <input id="band" type="number" value="0" readonly data-product="#salary"> zł
+            </th>
+            <td><label>Osób</label>
+                <input id="members" type="number" value="6" min="1" max="12" data-product="#salary" data-divide> os.
+            </td>
+            <td><label>Czas</label>
+                <input id="time" type="number" value="8" data-product="#rate" data-divide> godz.
+            </td>
+            <td><label>Płaca</label>
+                <input id="salary" type="number" value="0" readonly data-product="#rate"
+                       data-rewrite='[id^="wage-generic"]'> zł
+            </td>
+            <td><label>Stawka</label>
+                <input id="rate" type="number" value="0" readonly> zł/godz.
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</form>
+<form id="wages">
+    <input type="hidden" id="wage-generic-std" data-sum="#wage-standard">
+    <!--            <input type="hidden" id="wage-generic" data-sum="#wage-standard,#wage-main,#wage-dj,#wage-lighter">-->
+
+    <input type="hidden" id="wage-generic-main" data-sum="#wage-main">
+    <input type="hidden" id="wage-pa" data-sum="#wage-main">
+    <input type="hidden" id="wage-management" data-sum="#wage-main">
+
+    <input type="hidden" id="wage-generic-dj" data-sum="#wage-dj">
+    <input type="hidden" id="wage-djparty" data-sum="#wage-dj">
+    <input type="hidden" id="wage-poprawiny" data-sum="#wage-dj">
+
+    <input type="hidden" id="wage-generic-lighter" data-sum="#wage-lighter">
+    <input type="hidden" id="wage-light" data-sum="#wage-lighter">
+
+    <h2>Wypłaty</h2>
+    <table class="subtotals">
+        <tbody>
+        <tr>
+            <td><label>Marketing</label>
+                <input id="wage-marketing" type="number" readonly></td>
+            <td><label>Bus</label>
+                <input id="wage-bus" type="number" readonly></td>
+            <td><label>Manager+PA</label>
+                <input id="wage-main" type="number" data-floor="10" readonly></td>
+            <td><label>DJ</label>
+                <input id="wage-dj" type="number" data-floor="10" readonly></td>
+            <td><label>Lighter</label>
+                <input id="wage-lighter" type="number" data-floor="10" readonly></td>
+            <td><label>Basic (&times;3)</label>
+                <input id="wage-standard" type="number" data-floor="10" readonly></td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</body>
+</html>
